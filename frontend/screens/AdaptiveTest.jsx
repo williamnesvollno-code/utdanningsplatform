@@ -139,7 +139,7 @@ export default function AdaptiveTest() {
 
   const handleGenerate = async () => {
     setGenerating(true);
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
     const { questions: qs, level } = generateAdaptiveAssignments(subject, result.score);
     const assignment = {
       title: `Adaptiv Oppgave – ${subject} (Nivå ${level})`,
@@ -154,24 +154,30 @@ export default function AdaptiveTest() {
       status: 'Aktiv',
       aiGenerated: true,
     };
-    setGeneratedAssignment(assignment);
-    addAssignment(assignment);
+    const saved = await addAssignment(assignment);
     setGenerating(false);
-    setPhase(PHASES.ASSIGNMENTS);
+    if (saved) {
+      setGeneratedAssignment({ ...assignment, id: saved.id });
+      setPhase(PHASES.ASSIGNMENTS);
+    }
   };
 
-  const handleSubmitSolve = () => {
-    if (!generatedAssignment) return;
+  const handleSubmitSolve = async () => {
+    if (!generatedAssignment || !user?.id) return;
     let correct = 0;
-    generatedAssignment.questions.forEach((qq, i) => {
+    generatedAssignment.questions.forEach((qq) => {
       const ans = solveAnswers[qq.id];
       if (qq.type === 'flervalg' && ans === qq.correct) correct++;
       else if (qq.type === 'kort svar' && typeof ans === 'string' && qq.correct && ans.toLowerCase().trim() === qq.correct.toLowerCase()) correct++;
-      else if (qq.type === 'kode' || qq.type === 'tekstsvar') correct++; // auto-pass
+      else if (qq.type === 'kode' || qq.type === 'tekstsvar') correct++;
     });
     const score = Math.round((correct / generatedAssignment.questions.length) * 100);
     setFinalScore(score);
-    submitAssignment(generatedAssignment.id, user?.id || 'u2', generatedAssignment.questions.map(qq => solveAnswers[qq.id]));
+    await submitAssignment(
+      generatedAssignment.id,
+      user.id,
+      generatedAssignment.questions.map((qq) => solveAnswers[qq.id])
+    );
     setSubmitted(true);
   };
 

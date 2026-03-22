@@ -87,15 +87,21 @@ export default function AssignmentCreator() {
     setForm(f => ({ ...f, questions: f.questions.filter(q => q.id !== id) }));
   };
 
-  const handlePublish = () => {
-    const a = addAssignment({
+  const handlePublish = async () => {
+    const a = await addAssignment({
       ...form,
-      icon: form.subject === 'Matematikk' ? '📐'
-        : form.subject === 'Norsk' ? '📝'
-        : form.subject === 'Programmering' ? '💻'
-        : form.subject === 'Naturfag' ? '🔬'
-        : '📚',
+      icon:
+        form.subject === 'Matematikk'
+          ? '📐'
+          : form.subject === 'Norsk'
+            ? '📝'
+            : form.subject === 'Programmering'
+              ? '💻'
+              : form.subject === 'Naturfag'
+                ? '🔬'
+                : '📚',
     });
+    if (!a) return;
     addLog(`Publiserte oppgave: "${form.title}" for klasse ${form.class}`);
     setSaved(true);
     setTimeout(() => navigate('/teacher'), 1500);

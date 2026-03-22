@@ -47,7 +47,7 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState('oversikt');
   const [flip, setFlip] = useState(null);
 
-  const studentId = user?.id || 'u2';
+  const studentId = user?.id;
   const profile   = getSkillProfile(studentId);
   const mySubs    = getStudentSubmissions(studentId);
   const active    = assignments.filter(a => a.status === 'Aktiv');

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { isSupabaseConfigured } from './lib/supabase';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider, useApp } from './context/AppContext';
 
@@ -83,7 +84,7 @@ function StudentAssignmentList() {
   const { assignments, submissions } = useApp();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const mySubs = submissions.filter(s => s.studentId === (user?.id || 'u2'));
+  const mySubs = submissions.filter((s) => s.studentId === user?.id);
   const active = assignments.filter(a => a.status === 'Aktiv');
   const pending = active.filter(a => !mySubs.find(s => s.assignmentId === a.id));
   return (
@@ -158,17 +159,64 @@ function SettingsPage() {
   );
 }
 
+function ConfigMissing() {
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        background: 'var(--bg-base, #0f0f12)',
+      }}
+    >
+      <div
+        className="card"
+        style={{ maxWidth: 520, padding: 28, border: '1px solid var(--border-medium, #333)', borderRadius: 12 }}
+      >
+        <h1 style={{ fontSize: '1.25rem', marginBottom: 12 }}>Mangler Supabase-nøkler</h1>
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.65 }}>
+          Kopier <code style={{ fontSize: '0.8rem' }}>frontend/.env.example</code> til <code style={{ fontSize: '0.8rem' }}>frontend/.env</code> og sett{' '}
+          <code>VITE_SUPABASE_URL</code> og <code>VITE_SUPABASE_ANON_KEY</code> fra Supabase → Project Settings → API.
+        </p>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 16, lineHeight: 1.6 }}>
+          På Vercel: Settings → Environment Variables → samme navn. Deretter redeploy.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AuthBoot({ children }) {
+  const { initializing } = useAuth();
+  if (initializing) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-muted)' }}>Laster…</p>
+      </div>
+    );
+  }
+  return children;
+}
+
 export default function App() {
+  if (!isSupabaseConfigured()) {
+    return <ConfigMissing />;
+  }
+
   return (
     <AuthProvider>
-      <AppProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/*"    element={<AppLayout />} />
-          </Routes>
-        </BrowserRouter>
-      </AppProvider>
+      <AuthBoot>
+        <AppProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/*" element={<AppLayout />} />
+            </Routes>
+          </BrowserRouter>
+        </AppProvider>
+      </AuthBoot>
     </AuthProvider>
   );
 }

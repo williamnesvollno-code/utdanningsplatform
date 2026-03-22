@@ -24,9 +24,11 @@ export default function AssignmentSolver() {
 
   const setAnswer = (qId, val) => setAnswers(prev => ({ ...prev, [qId]: val }));
 
-  const handleSubmit = () => {
-    const answersArray = questions.map(q => answers[q.id] ?? null);
-    const res = submitAssignment(assignment.id, user?.id || 'u2', answersArray);
+  const handleSubmit = async () => {
+    if (!user?.id) return;
+    const answersArray = questions.map((q) => answers[q.id] ?? null);
+    const res = await submitAssignment(assignment.id, user.id, answersArray);
+    if (!res) return;
     setResult(res);
     setSubmitted(true);
     addLog(`Elev ${user?.name} leverte "${assignment.title}" – skår: ${res?.score}%`);
